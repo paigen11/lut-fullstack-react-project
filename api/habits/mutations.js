@@ -14,11 +14,48 @@ export const habitsMutations = {
     },
 
     async addEvent(_, { habitId, date }) {
-      console.log('add event');
+      try {
+        date.setHours(0, 0, 0, 0);
+        const habit = await Habits.findOneAndUpdate(
+          {
+            _id: habitId,
+            // this is what prevents multiple instances of the same event being logged and saved into the db
+            'events.date': {
+              $ne: date,
+            },
+          },
+          {
+            $addToSet: {
+              events: {
+                date,
+              },
+            },
+          },
+        );
+        return habit;
+      } catch (e) {
+        console.log('e', e);
+      }
     },
 
     async removeEvent(_, { habitId, eventId }) {
-      console.log('remove event');
+      try {
+        const habit = await Habits.findOneAndUpdate(
+          {
+            _id: habitId,
+          },
+          {
+            $pull: {
+              events: {
+                _id: eventId,
+              },
+            },
+          },
+        );
+        return habit;
+      } catch (e) {
+        console.log('e', e);
+      }
     },
   },
 };

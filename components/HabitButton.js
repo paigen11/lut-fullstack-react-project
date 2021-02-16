@@ -1,5 +1,4 @@
 import { useMutation } from '@apollo/react-hooks';
-import { useState } from 'react';
 import gql from 'graphql-tag';
 
 const ADD_EVENT = gql`
@@ -28,14 +27,49 @@ const REMOVE_EVENT = gql`
   }
 `;
 
-const HabitButton = ({ date }) => {
-  const [complete, setComplete] = useState(false);
+const HabitButton = ({ date, habitId, events }) => {
+  const [addEvent] = useMutation(ADD_EVENT, {
+    refetchQueries: ['getHabits'],
+  });
+  const [removeEvent] = useMutation(REMOVE_EVENT, {
+    refetchQueries: ['getHabits'],
+  });
+  // check if event date is equal to current date
+  const foundDate = events.find((event) => {
+    const eventDate = new Date(event.date);
+    return eventDate.getDate() === date.getDate();
+  });
+
   return (
     <span>
       {date.getMonth() + 1}/{date.getDate()}
-      <button onClick={() => setComplete(!complete)}>
-        {complete ? 'X' : 'O'}
-      </button>
+      {foundDate ? (
+        <button
+          onClick={() =>
+            removeEvent({
+              variables: {
+                habitId,
+                eventId: foundDate._id,
+              },
+            })
+          }
+        >
+          X
+        </button>
+      ) : (
+        <button
+          onClick={() =>
+            addEvent({
+              variables: {
+                habitId,
+                date,
+              },
+            })
+          }
+        >
+          O
+        </button>
+      )}
       <style jsx>{`
         span {
           display: flex;
